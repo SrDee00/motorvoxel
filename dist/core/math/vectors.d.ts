@@ -1,0 +1,13 @@
+import { Vec3 } from '../types';
+export declare function vec3_create(x?: number, y?: number, z?: number): Vec3;
+export declare function vec3_copy(out: Vec3, a: Vec3): Vec3;
+export declare function vec3_add(out: Vec3, a: Vec3, b: Vec3): Vec3;
+export declare function vec3_subtract(out: Vec3, a: Vec3, b: Vec3): Vec3;
+export declare function vec3_scale(out: Vec3, a: Vec3, scalar: number): Vec3;
+export declare function vec3_scaleAndAdd(out: Vec3, a: Vec3, b: Vec3, scale: number): Vec3;
+export declare function vec3_distance(a: Vec3, b: Vec3): number;
+export declare function vec3_length(a: Vec3): number;
+export declare function vec3_normalize(out: Vec3, a: Vec3): Vec3;
+export declare function vec3_dot(a: Vec3, b: Vec3): number;
+export declare function vec3_cross(out: Vec3, a: Vec3, b: Vec3): Vec3;
+export declare function vec3_lerp(out: Vec3, a: Vec3, b: Vec3, t: number): Vec3;

@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MotorVoxel Demo</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        #ui-panel {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        #stats {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            margin: 2px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container">
+        <canvas id="game-canvas"></canvas>
+    </div>
+    <div id="ui-panel">
+        <h3>MotorVoxel Demo</h3>
+        <p>Controls:</p>
+        <ul>
+            <li>WASD: Move</li>
+            <li>Mouse: Look</li>
+            <li>Space: Jump</li>
+            <li>1-9: Select block</li>
+            <li>Left Click: Place block</li>
+            <li>Right Click: Break block</li>
+        </ul>
+        <button id="wireframe-btn">Toggle Wireframe</button>
+        <button id="chunk-borders-btn">Toggle Chunk Borders</button>
+        <button id="fullscreen-btn">Toggle Fullscreen</button>
+    </div>
+    <div id="stats">
+        <p>FPS: <span id="fps">0</span></p>
+        <p>Chunks: <span id="chunks">0</span></p>
+        <p>Entities: <span id="entities">0</span></p>
+        <p>Position: <span id="position">0, 0, 0</span></p>
+    </div>
+
+    <script type="module">
+        import { Engine } from '../src/core/Engine.js';
+        import { WebGLRenderer } from '../src/rendering/WebGLRenderer.js';
+        import { VoxelWorld } from '../src/voxel/VoxelWorld.js';
+        import { Camera } from '../src/rendering/Camera.js';
+        import { ChunkMesher } from '../src/rendering/ChunkMesher.js';
+
+        // Initialize engine and systems
+        async function initDemo() {
+            const canvas = document.getElementById('game-canvas');
+            const statsElement = {
+                fps: document.getElementById('fps'),
+                chunks: document.getElementById('chunks'),
+                entities: document.getElementById('entities'),
+                position: document.getElementById('position')
+            };
+
+            // Configure canvas
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            // Create engine
+            const engine = new Engine();
+
+            // Initialize engine with WebGL renderer
+            await engine.init({
+                canvas: canvas,
+                renderer: 'webgl2',
+                debug: true
+            });
+
+            // Create voxel world
+            const voxelWorld = new VoxelWorld();
+            await voxelWorld.init();
+
+            // Create renderer
+            const renderer = new WebGLRenderer();
+            await renderer.init(canvas);
+
+            // Create camera
+            const camera = new Camera();
+            camera.position = [0, 10, 0];
+            camera.fov = 70;
+
+            // Create chunk mesher
+            const chunkMesher = new ChunkMesher();
+
+            // Generate initial world
+            voxelWorld.generateWorld();
+
+            // Game loop
+            let lastTime = performance.now();
+            let frameCount = 0;
+            let lastFpsUpdate = performance.now();
+
+            function gameLoop(currentTime) {
+                // Calculate delta time
+                const deltaTime = (currentTime - lastTime) / 1000;
+                lastTime = currentTime;
+
+                // Update FPS counter
+                frameCount++;
+                if (currentTime - lastFpsUpdate >= 1000) {
+                    const fps = Math.round((frameCount * 1000) / (currentTime - lastFpsUpdate));
+                    statsElement.fps.textContent = fps;
+                    frameCount = 0;
+                    lastFpsUpdate = currentTime;
+                }
+
+                // Update stats
+                statsElement.chunks.textContent = voxelWorld.loadedChunks;
+                statsElement.entities.textContent = 0; // Will be implemented later
+                statsElement.position.textContent = camera.position.join(', ');
+
+                // Update camera
+                camera.update();
+
+                // Render scene
+                renderer.beginFrame();
+                renderer.clear();
+
+                // Render chunks
+                const visibleChunks = voxelWorld.getVisibleChunks(camera);
+                visibleChunks.forEach(chunk => {
+                    const chunkMesh = chunkMesher.createChunkMesh(chunk);
+                    renderer.renderMesh(chunkMesh);
+                });
+
+                renderer.endFrame();
+
+                // Continue loop
+                requestAnimationFrame(gameLoop);
+            }
+
+            // Start game loop
+            gameLoop(performance.now());
+
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                renderer.resize(canvas.width, canvas.height);
+            });
+
+            // UI Controls
+            document.getElementById('wireframe-btn').addEventListener('click', () => {
+                renderer.toggleWireframe();
+            });
+
+            document.getElementById('chunk-borders-btn').addEventListener('click', () => {
+                renderer.toggleChunkBorders();
+            });
+
+            document.getElementById('fullscreen-btn').addEventListener('click', () => {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen();
+                } else {
+                    document.exitFullscreen();
+                }
+            });
+
+            console.log('MotorVoxel Demo initialized!');
+        }
+
+        // Start demo
+        initDemo().catch(error => {
+            console.error('Failed to initialize demo:', error);
+        });
+    </script>
+</body>
+</html>

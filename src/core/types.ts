@@ -60,6 +60,29 @@ export interface EngineEvents {
   'chunk:loaded': { x: number; y: number; z: number };
   'chunk:unloaded': { x: number; y: number; z: number };
   'block:changed': { x: number; y: number; z: number; oldType: BlockId; newType: BlockId };
+
+  // Physics
+  'physics:collision': {
+    bodyA: number;
+    bodyB: number;
+    normal: Vec3;
+    depth: number;
+  };
+  'physics:trigger': {
+    bodyA: number;
+    bodyB: number;
+  };
+  'physics:character:grounded': {
+    controllerId: number;
+    isGrounded: boolean;
+  };
+
+  // Network
+  'network:connect': void;
+  'network:disconnect': void;
+  'network:message': { type: string; data: any };
+  'network:entity:update': any;
+  'network:world:update': any;
 }
 
 export type Vec3 = Float32Array;
